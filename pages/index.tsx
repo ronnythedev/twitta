@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import FeedContainer from "../components/feed/FeedContainer";
-import SidebarContainer from "../components/sidebar/SidebarContainer";
+import Feed from "../components/feed";
+import Sidebar from "../components/sidebar";
 
 const Home: NextPage = () => {
   return (
@@ -13,9 +13,9 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="flex min-h-screen max-w-7xl mx-auto ">
-        <SidebarContainer />
+        <Sidebar />
 
-        <FeedContainer />
+        <Feed />
 
         {/* Widgets */}
 

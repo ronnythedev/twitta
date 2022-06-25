@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/outline";
 import MiniProfile from "./MiniProfile";
 
-export default function SidebarContainer() {
+export default function Index() {
   return (
     <div className="hidden sm:flex flex-col p-2 xl:items-start fixed h-full">
       <div className="hoverEffect p-0 hover:bg-blue-100 xl:px-1">
