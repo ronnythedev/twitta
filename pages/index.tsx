@@ -1,10 +1,15 @@
-import type { NextPage } from "next";
+import type { NextPage, GetServerSideProps } from "next";
 import Head from "next/head";
 import Feed from "../components/feed";
 import Sidebar from "../components/sidebar";
 import Widgets from "../components/widgets";
+import { EnumNewsArticles } from "../models/NewsArticle";
 
-const Home: NextPage = () => {
+type Props = {
+  articles: EnumNewsArticles;
+};
+
+const Home: NextPage<Props> = ({ articles }) => {
   return (
     <div>
       <Head>
@@ -18,12 +23,25 @@ const Home: NextPage = () => {
 
         <Feed />
 
-        <Widgets />
+        <Widgets articles={articles} />
 
         {/* Modal */}
       </main>
     </div>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const res = await fetch(
+    "https://saurav.tech/NewsAPI/top-headlines/category/business/us.json"
+  );
+  const data = await res.json();
+
+  return {
+    props: {
+      articles: data.articles,
+    },
+  };
 };
 
 export default Home;
