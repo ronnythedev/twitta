@@ -4,12 +4,14 @@ import Feed from "../components/feed";
 import Sidebar from "../components/sidebar";
 import Widgets from "../components/widgets";
 import { EnumNewsArticles } from "../models/NewsArticle";
+import { EnumRandomUsers } from "../models/RandomUsers";
 
 type Props = {
   articles: EnumNewsArticles;
+  randomUsers: EnumRandomUsers;
 };
 
-const Home: NextPage<Props> = ({ articles }) => {
+const Home: NextPage<Props> = ({ articles, randomUsers }) => {
   return (
     <div>
       <Head>
@@ -23,7 +25,7 @@ const Home: NextPage<Props> = ({ articles }) => {
 
         <Feed />
 
-        <Widgets articles={articles} />
+        <Widgets articles={articles} randomUsers={randomUsers} />
 
         {/* Modal */}
       </main>
@@ -32,14 +34,22 @@ const Home: NextPage<Props> = ({ articles }) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const res = await fetch(
+  // NEWS FREE API
+  const news = await fetch(
     "https://saurav.tech/NewsAPI/top-headlines/category/business/us.json"
   );
-  const data = await res.json();
+  const newsData = await news.json();
+
+  // RANDOM USERS FREE API
+  const randomUsers = await fetch(
+    "https://randomuser.me/api/?results=30&inc=name,login,picture"
+  );
+  const usersData = await randomUsers.json();
 
   return {
     props: {
-      articles: data.articles,
+      articles: newsData.articles,
+      randomUsers: usersData.results,
     },
   };
 };
