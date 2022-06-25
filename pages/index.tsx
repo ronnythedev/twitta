@@ -2,6 +2,7 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import Feed from "../components/feed";
 import Sidebar from "../components/sidebar";
+import Widgets from "../components/widgets";
 
 const Home: NextPage = () => {
   return (
@@ -17,7 +18,7 @@ const Home: NextPage = () => {
 
         <Feed />
 
-        {/* Widgets */}
+        <Widgets />
 
         {/* Modal */}
       </main>
