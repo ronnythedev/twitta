@@ -13,7 +13,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex min-h-screen max-w-7xl mx-auto ">
+      <main className="flex min-h-screen mx-auto ">
         <Sidebar />
 
         <Feed />
