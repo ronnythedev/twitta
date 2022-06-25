@@ -34,7 +34,7 @@ export default function Index({ articles, randomUsers }: Props) {
       <div className="sticky top-16 text-gray-700 space-y-3 bg-gray-100 pt-2 rounded-xl w-[90%] xl:w-[75%]">
         <h4 className="font-bold text-xl px-4">Who to follow</h4>
         {randomUsers.slice(0, randomUsersNumber).map((randomUser) => (
-          <UserCard randomUser={randomUser} />
+          <UserCard key={randomUser.login.uuid} randomUser={randomUser} />
         ))}
         <button
           onClick={() => {
