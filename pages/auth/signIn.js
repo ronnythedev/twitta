@@ -17,7 +17,7 @@ export default function signIn({ providers }) {
               alt="twitter logo"
             />
             <p className="text-center text-sm italic my-10 ">
-              This app is created for learning purposes
+              This app was created for learning purposes only
             </p>
             <button
               onClick={() => signInNextAuth(provider.id, { callbackUrl: "/" })}
