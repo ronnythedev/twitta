@@ -88,7 +88,7 @@ export default function Input() {
                   onClick={() => {
                     setSelectedImage(null);
                   }}
-                  className="h-7 text-black absolute cursor-pointer shadows-md shadow-white rounded-full"
+                  className="border h-7 text-black absolute cursor-pointer shadows-md border-white m-1 rounded-full"
                 />
                 <img
                   src={selectedImage}

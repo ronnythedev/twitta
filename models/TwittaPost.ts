@@ -1,9 +1,14 @@
-export interface TwittaPost {
+export type TwittaPost = {
     id: string;
+    image?: string;
     name: string;
-    username: string;
-    userImg: string;
-    img: string;
     text: string;
-    timestamp: string;
+    timestamp: PostTimestamp;
+    userImg: string;
+    username: string;
+  }
+
+  export type PostTimestamp = {
+    seconds:number;
+    nanoseconds:number;
   }

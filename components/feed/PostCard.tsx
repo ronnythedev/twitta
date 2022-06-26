@@ -6,6 +6,7 @@ import {
   ShareIcon,
   TrashIcon,
 } from "@heroicons/react/outline";
+import Moment from "react-moment";
 import { TwittaPost } from "../../models/TwittaPost";
 
 type Props = {
@@ -30,7 +31,7 @@ export default function PostCard({ post }: Props) {
             </h4>
             <span className="text-sm sm:text-[15px]">@{post.username} - </span>
             <span className="text-sm sm:text-[15px] hover:underline">
-              {post.timestamp}
+              <Moment fromNow>{new Date(post.timestamp.seconds * 1000)}</Moment>
             </span>
           </div>
 
@@ -41,7 +42,7 @@ export default function PostCard({ post }: Props) {
           {post.text}
         </p>
 
-        <img className="rounded-2xl mr-2" src={post.img} alt="" />
+        <img className="rounded-2xl mr-2" src={post.image} alt="" />
 
         <div className="flex justify-between text-gray-500 p-2">
           <ChatIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
