@@ -1,9 +1,6 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { getProviders, signIn as signInNextAuth } from "next-auth/react";
 
-export default function signIn({
-  providers,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function signIn({ providers }) {
   return (
     <div className="flex justify-center mt-20 space-x-4">
       <img
@@ -35,7 +32,7 @@ export default function signIn({
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps = async () => {
   const providers = await getProviders();
   return {
     props: {
