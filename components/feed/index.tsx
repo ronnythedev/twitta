@@ -23,11 +23,23 @@ export default function Index() {
       onSnapshot(
         query(collection(db, "posts"), orderBy("timestamp", "desc")),
         (snapshot: any) => {
-          const returnedPosts = snapshot.docs.map((x: { data: () => any }) =>
-            x.data()
-          );
-          console.log(returnedPosts);
-          setPosts(returnedPosts);
+          let localCollection: EnumPosts = [];
+          snapshot.docs.forEach((document: any) => {
+            let tPost: TwittaPost = {
+              documentId: document.id,
+              id: document.data().id,
+              image: document.data().image,
+              name: document.data().name,
+              text: document.data().text,
+              timestamp: document.data().timestamp,
+              userImg: document.data().userImg,
+              username: document.data().username,
+            };
+
+            localCollection.push(tPost);
+          });
+
+          setPosts(localCollection);
         }
       ),
     []
@@ -39,7 +51,7 @@ export default function Index() {
       <Input />
       <>
         {posts.map((post) => {
-          return <PostCard key={post.id} post={post} />;
+          return <PostCard key={post.documentId} post={post} />;
         })}
       </>
     </div>

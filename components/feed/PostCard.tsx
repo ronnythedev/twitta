@@ -6,14 +6,30 @@ import {
   ShareIcon,
   TrashIcon,
 } from "@heroicons/react/outline";
+import { setDoc, doc } from "firebase/firestore";
+import { db } from "../../firebase";
 import Moment from "react-moment";
 import { TwittaPost } from "../../models/TwittaPost";
+import { useSession } from "next-auth/react";
 
 type Props = {
   post: TwittaPost;
 };
 
 export default function PostCard({ post }: Props) {
+  const { data: session } = useSession();
+
+  const likePost = async () => {
+    if (session) {
+      await setDoc(
+        doc(db, "posts", post.documentId, "likes", session.user.uid),
+        {
+          username: session.user.username,
+        }
+      );
+    }
+  };
+
   return (
     <div className="flex p-3 cursor-pointer border-b border-gray-200">
       {/* post user image */}
@@ -31,7 +47,11 @@ export default function PostCard({ post }: Props) {
             </h4>
             <span className="text-sm sm:text-[15px]">@{post.username} - </span>
             <span className="text-sm sm:text-[15px] hover:underline">
-              <Moment fromNow>{new Date(post.timestamp.seconds * 1000)}</Moment>
+              <Moment fromNow>
+                {post.timestamp === null || post.timestamp === undefined
+                  ? new Date()
+                  : new Date(post.timestamp.seconds * 1000)}
+              </Moment>
             </span>
           </div>
 
@@ -47,7 +67,12 @@ export default function PostCard({ post }: Props) {
         <div className="flex justify-between text-gray-500 p-2">
           <ChatIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
           <TrashIcon className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100" />
-          <HeartIcon className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100" />
+          <HeartIcon
+            onClick={() => {
+              likePost();
+            }}
+            className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
+          />
           <ShareIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
           <ChartBarIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
         </div>
