@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   ChartBarIcon,
   ChatIcon,
@@ -6,27 +7,72 @@ import {
   ShareIcon,
   TrashIcon,
 } from "@heroicons/react/outline";
-import { setDoc, doc } from "firebase/firestore";
+import { HeartIcon as HeartSolid } from "@heroicons/react/solid";
+import {
+  setDoc,
+  doc,
+  onSnapshot,
+  collection,
+  deleteDoc,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 import Moment from "react-moment";
 import { TwittaPost } from "../../models/TwittaPost";
+import { Like } from "../../models/Like";
 import { useSession } from "next-auth/react";
 
 type Props = {
   post: TwittaPost;
 };
 
+interface EnumLikes extends Array<Like> {}
+
 export default function PostCard({ post }: Props) {
   const { data: session } = useSession();
+  const [likes, setLikes] = useState<EnumLikes>([]);
+  const [hasLiked, setHasLiked] = useState(false);
+
+  useEffect(() => {
+    () =>
+      onSnapshot(
+        collection(db, "posts", post.documentId, "likes"),
+        (snapshot: any) => {
+          let localCollection: EnumLikes = [];
+          snapshot.docs.forEach((document: any) => {
+            let tLike: Like = {
+              documentId: document.id,
+              username: document.data().username,
+            };
+
+            localCollection.push(tLike);
+          });
+          setLikes(localCollection);
+        }
+      );
+  }, [db]);
+
+  useEffect(() => {
+    if (session) {
+      setHasLiked(
+        likes.findIndex((like) => like.documentId === session?.user.uid) > 0
+      );
+    }
+  }, [likes]);
 
   const likePost = async () => {
     if (session) {
+      // if (hasLiked) {
+      //   await deleteDoc(
+      //     doc(db, "posts", post.documentId, "likes", session.user.uid)
+      //   );
+      // } else {
       await setDoc(
         doc(db, "posts", post.documentId, "likes", session.user.uid),
         {
           username: session.user.username,
         }
       );
+      //}
     }
   };
 
@@ -67,12 +113,23 @@ export default function PostCard({ post }: Props) {
         <div className="flex justify-between text-gray-500 p-2">
           <ChatIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
           <TrashIcon className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100" />
-          <HeartIcon
-            onClick={() => {
-              likePost();
-            }}
-            className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
-          />
+
+          {hasLiked ? (
+            <HeartSolid
+              onClick={() => {
+                likePost();
+              }}
+              className="h-9 w-9 hoverEffect p-2 text-red-600 hover:bg-red-100"
+            />
+          ) : (
+            <HeartIcon
+              onClick={() => {
+                likePost();
+              }}
+              className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
+            />
+          )}
+
           <ShareIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
           <ChartBarIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
         </div>
