@@ -42,7 +42,7 @@ export default function Index() {
 
   return (
     <div className="xl:ml-[370px] border-l border-r border-gray-200 xl:min-w-[576px] sm:ml-[73px] flex-grow max-w-xl">
-      <Header />
+      <Header showSparkIcon={true} headerTitle="Home" showBackIcon={false} />
       <Input />
       <>
         <AnimatePresence>
@@ -54,7 +54,11 @@ export default function Index() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <PostCard key={post.documentId} post={post} />
+              <PostCard
+                key={post.documentId}
+                postId={post.documentId}
+                post={post}
+              />
             </motion.div>
           ))}
         </AnimatePresence>

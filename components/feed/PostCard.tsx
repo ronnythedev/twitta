@@ -25,25 +25,28 @@ import { deleteObject, ref } from "firebase/storage";
 import { useRecoilState } from "recoil";
 import { modalState } from "../../state/atoms/modalAtom";
 import { selectedPostId } from "../../state/atoms/postAtom";
+import { useRouter } from "next/router";
 
 type Props = {
+  postId: string;
   post: TwittaPost;
 };
 
 interface EnumLikes extends Array<Like> {}
 interface EnumComments extends Array<Comment> {}
 
-export default function PostCard({ post }: Props) {
+export default function PostCard({ postId, post }: Props) {
   const { data: session } = useSession();
   const [likes, setLikes] = useState<EnumLikes>([]);
   const [comments, setComments] = useState<EnumComments>([]);
   const [hasLiked, setHasLiked] = useState(false);
   const [open, setOpen] = useRecoilState(modalState);
-  const [postId, setPostId] = useRecoilState(selectedPostId);
+  const [statePostId, setPostId] = useRecoilState(selectedPostId);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "posts", post.documentId, "likes"),
+      collection(db, "posts", postId, "likes"),
       (snapshot: any) => {
         let localCollection: EnumLikes = [];
 
@@ -61,7 +64,7 @@ export default function PostCard({ post }: Props) {
     );
 
     const unsubscribe2 = onSnapshot(
-      collection(db, "posts", post.documentId, "comments"),
+      collection(db, "posts", postId, "comments"),
       (snapshot: any) => {
         let localCommentsCollection: EnumComments = [];
 
@@ -93,16 +96,11 @@ export default function PostCard({ post }: Props) {
   const likePost = async () => {
     if (session) {
       if (hasLiked) {
-        await deleteDoc(
-          doc(db, "posts", post.documentId, "likes", session.user.uid)
-        );
+        await deleteDoc(doc(db, "posts", postId, "likes", session.user.uid));
       } else {
-        await setDoc(
-          doc(db, "posts", post.documentId, "likes", session.user.uid),
-          {
-            username: session.user.username,
-          }
-        );
+        await setDoc(doc(db, "posts", postId, "likes", session.user.uid), {
+          username: session.user.username,
+        });
       }
     } else {
       signIn();
@@ -112,10 +110,12 @@ export default function PostCard({ post }: Props) {
   const deletePost = async () => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       //TODO: Still need to remove "likes" collection inside the document
-      await deleteDoc(doc(db, "posts", post.documentId));
+      await deleteDoc(doc(db, "posts", postId));
       if (post.image) {
-        await deleteObject(ref(storage, `posts/${post.documentId}/image`));
+        await deleteObject(ref(storage, `posts/${postId}/image`));
       }
+
+      router.push("/");
     }
   };
 
@@ -160,7 +160,7 @@ export default function PostCard({ post }: Props) {
                 if (!session) {
                   signIn();
                 } else {
-                  setPostId(post.documentId);
+                  setPostId(postId);
                   setOpen(!open);
                 }
               }}
