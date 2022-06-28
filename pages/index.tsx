@@ -1,6 +1,7 @@
 import type { NextPage, GetServerSideProps } from "next";
 import Head from "next/head";
 import Feed from "../components/feed";
+import CommentModal from "../components/feed/CommentModal";
 import Sidebar from "../components/sidebar";
 import Widgets from "../components/widgets";
 import { EnumNewsArticles } from "../models/NewsArticle";
@@ -27,7 +28,7 @@ const Home: NextPage<Props> = ({ articles, randomUsers }) => {
 
         <Widgets articles={articles} randomUsers={randomUsers} />
 
-        {/* Modal */}
+        <CommentModal />
       </main>
     </div>
   );
