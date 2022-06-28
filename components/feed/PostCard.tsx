@@ -23,6 +23,7 @@ import { signIn, useSession } from "next-auth/react";
 import { deleteObject, ref } from "firebase/storage";
 import { useRecoilState } from "recoil";
 import { modalState } from "../../state/atoms/modalAtom";
+import { selectedPostId } from "../../state/atoms/postAtom";
 
 type Props = {
   post: TwittaPost;
@@ -35,6 +36,7 @@ export default function PostCard({ post }: Props) {
   const [likes, setLikes] = useState<EnumLikes>([]);
   const [hasLiked, setHasLiked] = useState(false);
   const [open, setOpen] = useRecoilState(modalState);
+  const [postId, setPostId] = useRecoilState(selectedPostId);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -130,7 +132,12 @@ export default function PostCard({ post }: Props) {
         <div className="flex justify-between text-gray-500 p-2">
           <ChatIcon
             onClick={() => {
-              setOpen(!open);
+              if (!session) {
+                signIn();
+              } else {
+                setPostId(post.documentId);
+                setOpen(!open);
+              }
             }}
             className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100"
           />
