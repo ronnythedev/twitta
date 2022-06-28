@@ -15,11 +15,12 @@ import {
   collection,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db, storage } from "../../firebase";
 import Moment from "react-moment";
 import { TwittaPost } from "../../models/TwittaPost";
 import { Like } from "../../models/Like";
 import { signIn, useSession } from "next-auth/react";
+import { deleteObject, ref } from "firebase/storage";
 
 type Props = {
   post: TwittaPost;
@@ -79,6 +80,16 @@ export default function PostCard({ post }: Props) {
     }
   };
 
+  const deletePost = async () => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      //TODO: Still need to remove "likes" collection inside the document
+      await deleteDoc(doc(db, "posts", post.documentId));
+      if (post.image) {
+        await deleteObject(ref(storage, `posts/${post.documentId}/image`));
+      }
+    }
+  };
+
   return (
     <div className="flex p-3 cursor-pointer border-b border-gray-200">
       {/* post user image */}
@@ -115,7 +126,16 @@ export default function PostCard({ post }: Props) {
 
         <div className="flex justify-between text-gray-500 p-2">
           <ChatIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
-          <TrashIcon className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100" />
+
+          {session?.user.uid === post.id && (
+            <TrashIcon
+              onClick={() => {
+                deletePost();
+              }}
+              className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
+            />
+          )}
+
           <div className="flex items-center">
             {hasLiked ? (
               <HeartSolid
