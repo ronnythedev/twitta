@@ -19,6 +19,7 @@ import { db, storage } from "../../firebase";
 import Moment from "react-moment";
 import { TwittaPost } from "../../models/TwittaPost";
 import { Like } from "../../models/Like";
+import { Comment } from "../../models/Comment";
 import { signIn, useSession } from "next-auth/react";
 import { deleteObject, ref } from "firebase/storage";
 import { useRecoilState } from "recoil";
@@ -30,10 +31,12 @@ type Props = {
 };
 
 interface EnumLikes extends Array<Like> {}
+interface EnumComments extends Array<Comment> {}
 
 export default function PostCard({ post }: Props) {
   const { data: session } = useSession();
   const [likes, setLikes] = useState<EnumLikes>([]);
+  const [comments, setComments] = useState<EnumComments>([]);
   const [hasLiked, setHasLiked] = useState(false);
   const [open, setOpen] = useRecoilState(modalState);
   const [postId, setPostId] = useRecoilState(selectedPostId);
@@ -54,6 +57,27 @@ export default function PostCard({ post }: Props) {
         });
 
         setLikes(localCollection);
+      }
+    );
+
+    const unsubscribe2 = onSnapshot(
+      collection(db, "posts", post.documentId, "comments"),
+      (snapshot: any) => {
+        let localCommentsCollection: EnumComments = [];
+
+        snapshot.docs.forEach((document: any) => {
+          let tComment: Comment = {
+            commentId: document.id,
+            name: document.data().name,
+            userImg: document.data().userImg,
+            username: document.data().username,
+            timestamp: document.data().timestamp,
+          };
+
+          localCommentsCollection.push(tComment);
+        });
+
+        setComments(localCommentsCollection);
       }
     );
   }, [db]);
@@ -104,7 +128,7 @@ export default function PostCard({ post }: Props) {
         className="h-11 w-11 rounded-full mr-4"
       />
 
-      <div className="">
+      <div className="flex-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1 whitespace-nowrap">
             <h4 className="font-bold text-[15px] sm:text-[16px] hover:underline">
@@ -130,17 +154,22 @@ export default function PostCard({ post }: Props) {
         <img className="rounded-2xl mr-2" src={post.image} alt="" />
 
         <div className="flex justify-between text-gray-500 p-2">
-          <ChatIcon
-            onClick={() => {
-              if (!session) {
-                signIn();
-              } else {
-                setPostId(post.documentId);
-                setOpen(!open);
-              }
-            }}
-            className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100"
-          />
+          <div className="flex items-center select-none">
+            <ChatIcon
+              onClick={() => {
+                if (!session) {
+                  signIn();
+                } else {
+                  setPostId(post.documentId);
+                  setOpen(!open);
+                }
+              }}
+              className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100"
+            />
+            {comments.length > 0 && (
+              <span className={"text-sm select-none"}>{comments.length}</span>
+            )}
+          </div>
 
           {session?.user.uid === post.id && (
             <TrashIcon

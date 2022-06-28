@@ -3,23 +3,32 @@ import { useRecoilState } from "recoil";
 import { modalState } from "../../state/atoms/modalAtom";
 import { selectedPostId } from "../../state/atoms/postAtom";
 import Modal from "react-modal";
+import { useRouter } from "next/router";
 import {
   EmojiHappyIcon,
   PhotographIcon,
   XIcon,
 } from "@heroicons/react/outline";
 import { db } from "../../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from "firebase/firestore";
 import { TwittaPost } from "../../models/TwittaPost";
 import Moment from "react-moment";
 import { useSession } from "next-auth/react";
 
 export default function CommentModal() {
+  const [post, setPost] = useState<TwittaPost>();
+  const [input, setInput] = useState("");
+
   const [open, setOpen] = useRecoilState(modalState);
   const [postId] = useRecoilState(selectedPostId);
-  const [post, setPost] = useState<TwittaPost>();
   const { data: session } = useSession();
-  const [input, setInput] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     onSnapshot(doc(db, "posts", postId), (document: any) => {
@@ -39,8 +48,18 @@ export default function CommentModal() {
     });
   }, [postId, db]);
 
-  const sendComment = () => {
-    return null;
+  const sendComment = async () => {
+    await addDoc(collection(db, "posts", postId, "comments"), {
+      comment: input,
+      name: session?.user.name,
+      username: session?.user.username,
+      userImg: session?.user.image,
+      timestamp: serverTimestamp(),
+    });
+
+    setOpen(false);
+    setInput("");
+    router.push(`posts/${postId}`);
   };
 
   return (
