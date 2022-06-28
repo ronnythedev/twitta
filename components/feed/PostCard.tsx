@@ -19,7 +19,7 @@ import { db } from "../../firebase";
 import Moment from "react-moment";
 import { TwittaPost } from "../../models/TwittaPost";
 import { Like } from "../../models/Like";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 type Props = {
   post: TwittaPost;
@@ -33,46 +33,49 @@ export default function PostCard({ post }: Props) {
   const [hasLiked, setHasLiked] = useState(false);
 
   useEffect(() => {
-    () =>
-      onSnapshot(
-        collection(db, "posts", post.documentId, "likes"),
-        (snapshot: any) => {
-          let localCollection: EnumLikes = [];
-          snapshot.docs.forEach((document: any) => {
-            let tLike: Like = {
-              documentId: document.id,
-              username: document.data().username,
-            };
+    const unsubscribe = onSnapshot(
+      collection(db, "posts", post.documentId, "likes"),
+      (snapshot: any) => {
+        let localCollection: EnumLikes = [];
 
-            localCollection.push(tLike);
-          });
-          setLikes(localCollection);
-        }
-      );
+        snapshot.docs.forEach((document: any) => {
+          let tLike: Like = {
+            likeId: document.id,
+            username: document.data().username,
+          };
+
+          localCollection.push(tLike);
+        });
+
+        setLikes(localCollection);
+      }
+    );
   }, [db]);
 
   useEffect(() => {
     if (session) {
       setHasLiked(
-        likes.findIndex((like) => like.documentId === session?.user.uid) > 0
+        likes.findIndex((like) => like.likeId === session?.user.uid) !== -1
       );
     }
   }, [likes]);
 
   const likePost = async () => {
     if (session) {
-      // if (hasLiked) {
-      //   await deleteDoc(
-      //     doc(db, "posts", post.documentId, "likes", session.user.uid)
-      //   );
-      // } else {
-      await setDoc(
-        doc(db, "posts", post.documentId, "likes", session.user.uid),
-        {
-          username: session.user.username,
-        }
-      );
-      //}
+      if (hasLiked) {
+        await deleteDoc(
+          doc(db, "posts", post.documentId, "likes", session.user.uid)
+        );
+      } else {
+        await setDoc(
+          doc(db, "posts", post.documentId, "likes", session.user.uid),
+          {
+            username: session.user.username,
+          }
+        );
+      }
+    } else {
+      signIn();
     }
   };
 
@@ -113,23 +116,30 @@ export default function PostCard({ post }: Props) {
         <div className="flex justify-between text-gray-500 p-2">
           <ChatIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
           <TrashIcon className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100" />
-
-          {hasLiked ? (
-            <HeartSolid
-              onClick={() => {
-                likePost();
-              }}
-              className="h-9 w-9 hoverEffect p-2 text-red-600 hover:bg-red-100"
-            />
-          ) : (
-            <HeartIcon
-              onClick={() => {
-                likePost();
-              }}
-              className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
-            />
-          )}
-
+          <div className="flex items-center">
+            {hasLiked ? (
+              <HeartSolid
+                onClick={() => {
+                  likePost();
+                }}
+                className="h-9 w-9 hoverEffect p-2 text-red-600 hover:bg-red-100"
+              />
+            ) : (
+              <HeartIcon
+                onClick={() => {
+                  likePost();
+                }}
+                className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
+              />
+            )}
+            {likes.length > 0 && (
+              <span
+                className={`${hasLiked && "text-red-600 text-sm select-none"}`}
+              >
+                {likes.length}
+              </span>
+            )}
+          </div>
           <ShareIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
           <ChartBarIcon className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100" />
         </div>

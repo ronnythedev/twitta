@@ -1,4 +1,4 @@
 export type Like = {
-    documentId: string;
+    likeId:string;
     username: string;
 }
