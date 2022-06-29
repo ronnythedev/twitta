@@ -27,18 +27,23 @@ import { modalState } from "../../state/atoms/modalAtom";
 import { selectedPostId } from "../../state/atoms/postAtom";
 import { useRouter } from "next/router";
 
-type Props = {
-  postId: string;
-  post: TwittaPost;
-};
-
 interface EnumLikes extends Array<Like> {}
 interface EnumComments extends Array<Comment> {}
 
-export default function PostCard({ postId, post }: Props) {
+type Props = {
+  commentId: string;
+  originalPostId: string;
+  comment: Comment;
+};
+
+export default function CommentComponent({
+  commentId,
+  originalPostId,
+  comment,
+}: Props) {
   const { data: session } = useSession();
   const [likes, setLikes] = useState<EnumLikes>([]);
-  const [comments, setComments] = useState<EnumComments>([]);
+
   const [hasLiked, setHasLiked] = useState(false);
   const [open, setOpen] = useRecoilState(modalState);
   const [statePostId, setPostId] = useRecoilState(selectedPostId);
@@ -46,7 +51,7 @@ export default function PostCard({ postId, post }: Props) {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "posts", postId, "likes"),
+      collection(db, "posts", originalPostId, "comments", commentId, "likes"),
       (snapshot: any) => {
         let localCollection: EnumLikes = [];
 
@@ -62,30 +67,7 @@ export default function PostCard({ postId, post }: Props) {
         setLikes(localCollection);
       }
     );
-
-    const unsubscribe2 = onSnapshot(
-      collection(db, "posts", postId, "comments"),
-      (snapshot: any) => {
-        let localCommentsCollection: EnumComments = [];
-
-        snapshot.docs.forEach((document: any) => {
-          let tComment: Comment = {
-            commentId: document.id,
-            name: document.data().name,
-            comment: document.data().comment,
-            userImg: document.data().userImg,
-            username: document.data().username,
-            timestamp: document.data().timestamp,
-            userId: document.data().userId,
-          };
-
-          localCommentsCollection.push(tComment);
-        });
-
-        setComments(localCommentsCollection);
-      }
-    );
-  }, [db]);
+  }, [db, originalPostId, commentId]);
 
   useEffect(() => {
     if (session) {
@@ -95,37 +77,53 @@ export default function PostCard({ postId, post }: Props) {
     }
   }, [likes]);
 
-  const likePost = async () => {
+  const likeComment = async () => {
     if (session) {
       if (hasLiked) {
-        await deleteDoc(doc(db, "posts", postId, "likes", session.user.uid));
+        await deleteDoc(
+          doc(
+            db,
+            "posts",
+            originalPostId,
+            "comments",
+            commentId,
+            "likes",
+            session.user.uid
+          )
+        );
       } else {
-        await setDoc(doc(db, "posts", postId, "likes", session.user.uid), {
-          username: session.user.username,
-        });
+        await setDoc(
+          doc(
+            db,
+            "posts",
+            originalPostId,
+            "comments",
+            commentId,
+            "likes",
+            session.user.uid
+          ),
+          {
+            username: session.user.username,
+          }
+        );
       }
     } else {
       signIn();
     }
   };
 
-  const deletePost = async () => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
+  const deleteComment = async () => {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
       //TODO: Still need to remove "likes" collection inside the document
-      await deleteDoc(doc(db, "posts", postId));
-      if (post.image) {
-        await deleteObject(ref(storage, `posts/${postId}/image`));
-      }
-
-      router.push("/");
+      await deleteDoc(doc(db, "posts", originalPostId, "comments", commentId));
     }
   };
 
   return (
-    <div className="flex p-3 cursor-pointer border-b border-gray-200">
+    <div className="flex p-3 cursor-pointer border-b border-gray-200 pl-20">
       {/* post user image */}
       <img
-        src={post.userImg}
+        src={comment.userImg}
         alt="user-image"
         className="h-11 w-11 rounded-full mr-4"
       />
@@ -134,14 +132,16 @@ export default function PostCard({ postId, post }: Props) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1 whitespace-nowrap">
             <h4 className="font-bold text-[15px] sm:text-[16px] hover:underline">
-              {post.name}
+              {comment.name}
             </h4>
-            <span className="text-sm sm:text-[15px]">@{post.username} - </span>
+            <span className="text-sm sm:text-[15px]">
+              @{comment.username} -{" "}
+            </span>
             <span className="text-sm sm:text-[15px] hover:underline">
               <Moment fromNow>
-                {post.timestamp === null || post.timestamp === undefined
+                {comment.timestamp === null || comment.timestamp === undefined
                   ? new Date()
-                  : new Date(post.timestamp.seconds * 1000)}
+                  : new Date(comment.timestamp.seconds * 1000)}
               </Moment>
             </span>
           </div>
@@ -149,23 +149,9 @@ export default function PostCard({ postId, post }: Props) {
           <DotsHorizontalIcon className="h-10 hoverEffect w-10 hover:bg-sky-100 hover:text-sky-500 p-2" />
         </div>
 
-        <p
-          onClick={() => {
-            router.push(`/posts/${postId}`);
-          }}
-          className="text-gray-800 text-[15px sm:text-[16px] mb-2"
-        >
-          {post.text}
+        <p className="text-gray-800 text-[15px sm:text-[16px] mb-2">
+          {comment.comment}
         </p>
-
-        <img
-          onClick={() => {
-            router.push(`/posts/${postId}`);
-          }}
-          className="rounded-2xl mr-2"
-          src={post.image}
-          alt=""
-        />
 
         <div className="flex justify-between text-gray-500 p-2">
           <div className="flex items-center select-none">
@@ -174,21 +160,19 @@ export default function PostCard({ postId, post }: Props) {
                 if (!session) {
                   signIn();
                 } else {
-                  setPostId(postId);
+                  setPostId(originalPostId);
                   setOpen(!open);
                 }
               }}
               className="h-9 w-9 hoverEffect p-2 hover:text-sky-500 hover:bg-sky-100"
             />
-            {comments.length > 0 && (
-              <span className={"text-sm select-none"}>{comments.length}</span>
-            )}
           </div>
 
-          {session?.user.uid === post.id && (
+          {/* //TODO: fix this */}
+          {session?.user.uid === comment.userId && (
             <TrashIcon
               onClick={() => {
-                deletePost();
+                deleteComment();
               }}
               className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
             />
@@ -198,14 +182,14 @@ export default function PostCard({ postId, post }: Props) {
             {hasLiked ? (
               <HeartSolid
                 onClick={() => {
-                  likePost();
+                  likeComment();
                 }}
                 className="h-9 w-9 hoverEffect p-2 text-red-600 hover:bg-red-100"
               />
             ) : (
               <HeartIcon
                 onClick={() => {
-                  likePost();
+                  likeComment();
                 }}
                 className="h-9 w-9 hoverEffect p-2 hover:text-red-600 hover:bg-red-100"
               />

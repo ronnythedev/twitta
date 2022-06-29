@@ -10,21 +10,33 @@ import { EnumRandomUsers } from "../../models/RandomUsers";
 import Header from "../../components/feed/Header";
 import PostCard from "../../components/feed/PostCard";
 import { db } from "../../firebase";
-import { onSnapshot, doc } from "firebase/firestore";
+import {
+  onSnapshot,
+  doc,
+  collection,
+  query as queryFiresore,
+  orderBy,
+} from "firebase/firestore";
 import { TwittaPost } from "../../models/TwittaPost";
+import { Comment } from "../../models/Comment";
+import CommentComponent from "../../components/feed/Comment";
 
 type Props = {
   articles: EnumNewsArticles;
   randomUsers: EnumRandomUsers;
 };
 
+interface EnumComments extends Array<Comment> {}
+
 const PostPage: NextPage<Props> = ({ articles, randomUsers }) => {
   const router = useRouter();
   const query = router.query;
   const [post, setPost] = useState<TwittaPost>();
+  const [comments, setComments] = useState<EnumComments>([]);
 
   useEffect(() => {
     if (query && query.id) {
+      // Get the post information
       let id = query.id as string;
       onSnapshot(doc(db, "posts", id), (snapshot: any) => {
         if (snapshot && snapshot.data()) {
@@ -42,6 +54,34 @@ const PostPage: NextPage<Props> = ({ articles, randomUsers }) => {
           setPost(tPost);
         }
       });
+
+      // Get the list of comments tied to the given post
+      onSnapshot(
+        queryFiresore(
+          collection(db, "posts", id, "comments"),
+          orderBy("timestamp", "desc")
+        ),
+        (snapshot: any) => {
+          let localCommentsCollection: EnumComments = [];
+
+          snapshot.docs.forEach((document: any) => {
+            let tComment: Comment = {
+              commentId: document.id,
+              name: document.data().name,
+              comment: document.data().comment,
+              userImg: document.data().userImg,
+              username: document.data().username,
+              timestamp: document.data().timestamp,
+              userId: document.data().userId,
+            };
+
+            localCommentsCollection.push(tComment);
+          });
+
+          setComments(localCommentsCollection);
+          console.log(localCommentsCollection);
+        }
+      );
     }
   }, [db, query]);
 
@@ -69,6 +109,19 @@ const PostPage: NextPage<Props> = ({ articles, randomUsers }) => {
               postId={post.documentId}
               post={post}
             />
+          )}
+
+          {comments.length > 0 && (
+            <div className="">
+              {comments.map((comment) => (
+                <CommentComponent
+                  key={comment.commentId}
+                  commentId={comment.commentId}
+                  originalPostId={query.id as string}
+                  comment={comment}
+                />
+              ))}
+            </div>
           )}
         </div>
 
