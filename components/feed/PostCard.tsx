@@ -41,7 +41,7 @@ export default function PostCard({ postId, post }: Props) {
   const [comments, setComments] = useState<EnumComments>([]);
   const [hasLiked, setHasLiked] = useState(false);
   const [open, setOpen] = useRecoilState(modalState);
-  const [statePostId, setPostId] = useRecoilState(selectedPostId);
+  const [, setPostId] = useRecoilState(selectedPostId);
   const router = useRouter();
 
   useEffect(() => {

@@ -19,7 +19,7 @@ export default function Index({ articles, randomUsers }: Props) {
       <TopSearch />
 
       <div className="text-gray-700 space-y3 bg-gray-100 rounded-xl pt-2 w-[90%] xl:w-[75%]">
-        <h4 className="font-bold text-xl px-4">What's happening</h4>
+        <h4 className="font-bold text-xl px-4">What`s happening</h4>
         <>
           <AnimatePresence>
             {articles.slice(0, articleNumber).map((article) => (

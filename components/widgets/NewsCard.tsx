@@ -6,7 +6,7 @@ type Props = {
 
 export default function NewsCard({ article }: Props) {
   return (
-    <a href={article.url} target="_blank" className="">
+    <a href={article.url} target="_blank" className="" rel="noreferrer">
       <div className="flex items-center justify-between px-4 py-2 space-x-1 hover:bg-gray-200 transition duration-500 ease-out">
         <div className="space-y-0.5">
           <h6 className="text-sm font-bold">{article.title}</h6>

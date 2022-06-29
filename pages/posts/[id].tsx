@@ -20,6 +20,7 @@ import {
 import { TwittaPost } from "../../models/TwittaPost";
 import { Comment } from "../../models/Comment";
 import CommentComponent from "../../components/feed/Comment";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Props = {
   articles: EnumNewsArticles;
@@ -113,14 +114,24 @@ const PostPage: NextPage<Props> = ({ articles, randomUsers }) => {
 
           {comments.length > 0 && (
             <div className="">
-              {comments.map((comment) => (
-                <CommentComponent
-                  key={comment.commentId}
-                  commentId={comment.commentId}
-                  originalPostId={query.id as string}
-                  comment={comment}
-                />
-              ))}
+              <AnimatePresence>
+                {comments.map((comment) => (
+                  <motion.div
+                    key={comment.commentId}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <CommentComponent
+                      key={comment.commentId}
+                      commentId={comment.commentId}
+                      originalPostId={query.id as string}
+                      comment={comment}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </div>
